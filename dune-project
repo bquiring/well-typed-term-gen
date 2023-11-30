@@ -6,5 +6,6 @@
  (depends ocaml dune))
 
 (package
- (name gen_haskell)
+ (name gen_sml)
  (depends not_useless))
+

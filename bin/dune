@@ -1,5 +1,7 @@
 (executable
- (public_name gen_haskell)
- (name gen_haskell)
+ (public_name gen_sml)
+ (name gen_sml)
  (libraries not_useless)
- (package gen_haskell))
+ (package gen_sml))
+
+
