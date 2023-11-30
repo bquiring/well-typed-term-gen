@@ -9,7 +9,9 @@ Dependencies:
 
 Opam Dependencies:
 * `unionFind`
-
+```
+opam install unionFind
+```
 
 to build:
 ```
@@ -17,7 +19,13 @@ dune build
 ```
 
 
-to run:
+To generate many terms that are dumped to the command line:
 ```
-dune exec -- gen_haskell -n 1000 -size 15
+dune exec -- gen_sml -n 10 -size 15
+```
+
+To generate many terms that are passed to Standard ML:
+```
+dune exec -- gen_sml -n 10 -size 15 > test.sml
+sml test.sml
 ```
