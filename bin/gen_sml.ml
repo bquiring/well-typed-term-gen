@@ -10,54 +10,54 @@ let tV a = TyVar a
    one that is the infix form and 
    one that can be used as generic term 
  *)
+let n (str, ty) = (str, (ty, None))
+
+let infix (str, ty) = ("op" ^ str, (ty, Some (fun arg1 arg2 -> arg1 ^ " " ^ str ^ " " ^ arg2)))
+
+let eq str_ty ty = 
+  ("(fn (x : " ^ str_ty ^ ", y : " ^ str_ty ^ ") => x = y)", 
+   ([ty; ty] --> tBool,
+    Some (fun arg1 arg2 -> "((" ^ arg1 ^ ") : " ^ str_ty ^ ")  = ((" ^ arg2 ^ ") : " ^ str_ty ^ ")")))
+
 let sml_std_lib =
   [(* (";",    [tV "b"; tV "a"] --> (tV "a")); *)
-   ("0",      tInt);
-   ("1",      tInt);
-   ("2",      tInt);
-   ("(fn (x, y) => x + y)",    [tInt; tInt] --> tInt);
-   ("(fn (x, y) => x - y)",    [tInt; tInt] --> tInt);
-(*
-   ("+",    [tInt; tInt] --> tInt);
-   ("-",    [tInt; tInt] --> tInt);
- *)
-   ("[]",     tList (tV "a"));
-   ("(fn (x, y) => x :: y)",    [tV "a"; tList (tV "a")] --> tList (tV "a"));
-(*
-   ("::",    [tV "a"; tList (tV "a")] --> tList (tV "a"));
- *)
-   ("List.hd",                     [tList (tV "a")] --> tV "a");
-   ("List.tl",                     [tList (tV "a")] --> tList (tV "a"));
-   ("List.take",                   [tList (tV "a"); tInt] --> tList (tV "a"));
-   ("List.nth",                    [tList (tV "a"); tInt] --> tV "a");
-   ("List.length",                 [tList (tV "a")] --> tInt);
-   ("(fn (x, y) => x @ y)",        [tList (tV "a"); tList (tV "a")] --> tList (tV "a"));
-   ("List.filter",                 [[tV "a"] --> tBool] --> ([tList (tV "a")] --> tList (tV "a")));
-   ("List.map",                    [[tV "a"] --> tV "b"] --> ([tList (tV "a")] --> tList (tV "b")));
-   ("List.foldr",                  [[tV "b"; tV "a"] --> tV "a"] --> ([tV "a"] --> ([tList (tV "b")] --> tV "a")));
-   ("(fn (x, y) => x andalso y)",  [tBool; tBool] --> tBool);
-   ("(fn (x, y) => x orelse y)",   [tBool; tBool] --> tBool);
-(*
-   ("andalso",   [tBool; tBool] --> tBool);
-   ("orelse",   [tBool; tBool] --> tBool);
- *)
-   ("not",    [tBool] --> tBool);
-   ("true",   tBool);
-   ("false",  tBool);
-   ("(raise Fail \"fail!\")", tV "a");
-(*
-   ("(fn (x, y) => x = y)", [tV "a"; tV "a"] --> tBool);
-   Problem term: 
-   ((fn (x, y) => x = y) ((fn (x3 : (int), x4 : ((int) list)) => x2), (fn (x, y) => x :: y)))
- *)
-   ("(fn (x : int, y : int) => x = y)", [tInt; tInt] --> tBool);
-   ("(fn (x : bool, y : bool) => x = y)", [tBool; tBool] --> tBool);
-   ("(fn (x : int list, y : int list) => x = y)", [tList tInt; tList tInt] --> tBool);
-(*
-   ("=", [tInt; tInt] --> tBool);
-   ("=", [tBool; tBool] --> tBool);
-   ("=", [tList tInt; tList tInt] --> tBool);
- *)
+    n("0",      tInt);
+    n("1",      tInt);
+    n("2",      tInt);
+    infix("+",  [tInt; tInt] --> tInt);
+    infix("-",  [tInt; tInt] --> tInt);
+
+    n("[]",           tList (tV "a"));
+    infix("::",       [tV "a"; tList (tV "a")] --> tList (tV "a"));
+    n("List.hd",      [tList (tV "a")] --> tV "a");
+    n("List.tl",      [tList (tV "a")] --> tList (tV "a"));
+    n("List.take",    [tList (tV "a"); tInt] --> tList (tV "a"));
+    n("List.nth",     [tList (tV "a"); tInt] --> tV "a");
+    n("List.length",  [tList (tV "a")] --> tInt);
+    infix("@",        [tList (tV "a"); tList (tV "a")] --> tList (tV "a"));
+    n("List.filter",  [[tV "a"] --> tBool] --> ([tList (tV "a")] --> tList (tV "a")));
+    n("List.map",     [[tV "a"] --> tV "b"] --> ([tList (tV "a")] --> tList (tV "b")));
+    n("List.foldr",   [[tV "b"; tV "a"] --> tV "a"] --> ([tV "a"] --> ([tList (tV "b")] --> tV "a")));
+
+    n("true",   tBool);
+    n("false",  tBool);
+    n("not",    [tBool] --> tBool);
+    ("(fn (x, y) => x andalso y)", 
+     ([tBool; tBool] --> tBool,
+      Some (fun arg1 arg2 -> arg1 ^ " andalso " ^ arg2)));
+    ("(fn (x, y) => x orelse y)", 
+     ([tBool; tBool] --> tBool,
+      Some (fun arg1 arg2 -> arg1 ^ " orelse " ^ arg2)));
+
+    n("(raise Fail \"fail!\")", tV "a");
+    (*
+      ("(fn (x, y) => x = y)", [tV "a"; tV "a"] --> tBool);
+      Problem term: 
+      ((fn (x, y) => x = y) ((fn (x3 : (int), x4 : ((int) list)) => x2), (fn (x, y) => x :: y)))
+     *)
+    eq "int" tInt;
+    eq "bool" tBool;
+    eq "int list" (tList tInt);
   ]
 
 let string_of_ty (ty0 : ty) =
@@ -86,20 +86,13 @@ let string_of_ty (ty0 : ty) =
     in
   toStr false ty0
 
-(* this should be an attribute on the library, probably *)
-let is_infix f =
+let infixOf f = 
   match f with
-  | "+" | "-"
-  | ";"
-  | "::" | "@"
-  | "="
-  | "andalso" | "orelse" -> true
-  | _ -> false
-
-let make_infix f = f
-(*
-  String.sub f 1 (String.length f - 2)
- *)
+  | Ref (f, _) -> 
+      (match List.assoc_opt f sml_std_lib with
+       | Some (_, opt) -> opt
+       | None -> None)
+  | _ -> None
 
 let rec sml_string e =
   match e with
@@ -124,17 +117,17 @@ let rec sml_string e =
          let body = sml_string e_body in
          "(fn " ^ params ^ " => " ^ body ^ ")")
   | Call (e_f, e_args) ->
-    (match e_f, e_args with
-     | Ref (f, _), [e1; e2] when is_infix f ->
+    (match e_f, e_args, infixOf e_f with
+     | Ref (_, _), [e1; e2], Some fn ->
         let e1 = sml_string e1 in
-        let infix_f = make_infix f in
         let e2 = sml_string e2 in 
-        "(" ^ e1 ^ " " ^ infix_f  ^ " " ^ e2 ^ ")"
-     | _, [] ->
+        let result = fn e1 e2 in
+        "(" ^ result ^ ")"
+     | _, [], _ ->
         let e_f = sml_string e_f in
         let args = "()" in
         "(" ^ e_f ^ " " ^ args ^ ")"
-     | _, _ ->
+     | _, _, _ ->
         let e_f = sml_string e_f in
         let args = "(" ^ (String.concat ", " (List.map sml_string e_args)) ^ ")" in
         "(" ^ e_f ^ " " ^ args ^ ")")
@@ -148,7 +141,7 @@ let generate_sml size =
     | "(raise Fail \"fail!\")" -> 0. (*1. /. 10. *)
     | _ -> 1. in
   let weighted_std_lib =
-    List.map (fun entry -> (weights (fst entry), entry)) sml_std_lib in
+    List.map (fun (x, (ty, _)) -> (weights x, (x, ty))) sml_std_lib in
   let gen_ty = [tList tInt] --> tList tInt in
   Generate.generate_exp weighted_std_lib size (tV "a") gen_ty
   (* TODO: program stats in debug mode *)
@@ -173,6 +166,122 @@ let print_file tests =
        print_lines pre post lines' in
 
   let prelude = [
+      (*
+      "(* SML Basis *)";
+      "";
+      "datatype order = LESS | EQUAL | GREATER";
+      "";
+      "structure Int =";
+      "  struct";
+      "";
+      "    fun compare (s1 : int, s2) =";
+      "	  if (s1 < s2) then LESS";
+      "	  else if (s2 < s1) then GREATER";
+      "	  else EQUAL";
+      "";
+      "  end";
+      "";
+      "structure String =";
+      "  struct";
+      "";
+      "    fun compare (s1 : string, s2) =";
+      "	  if (s1 < s2) then LESS";
+      "	  else if (s2 < s1) then GREATER";
+      "	  else EQUAL";
+      "";
+      "  end";
+      "";
+      "structure List =";
+      "  struct";
+      "";
+      "    exception Empty";
+      "    exception Subscript";
+      "";
+      "    fun hd [] = raise Empty";
+      "      | hd (x::_) = x";
+      "";
+      "    fun tl [] = raise Empty";
+      "      | tl (_::xs) = xs";
+      "";
+      "    fun nth ([], _) = raise Subscript";
+      "      | nth (x::_, 0) = x";
+      "      | nth (_::r, n) = nth(r, n-1)";
+      "";
+      "    (* TODO: inefficient for negative indices *)";
+      "    fun take (_, 0) = []";
+      "      | take ([], _) = raise Subscript";
+      "      | take (x::xs, i) = x :: (take (xs, i-1))";
+      "";
+      "    fun length xs = let";
+      "          fun lp (xs, n) = (case xs of [] => n | (_::r) => lp(r, n+1))";
+      "          in";
+      "            lp (xs, 0)";
+      "          end";
+      "";
+      "    fun revAppend (xs, ys) = (case xs of [] => ys | x::xr => revAppend (xr, x::ys))";
+      "";
+      "    fun rev xs = revAppend (xs, [])";
+      "";
+      "    fun filter f xs = let";
+      "          fun lp (xs, ys) = (case xs";
+      "                 of [] => rev ys";
+      "                  | x::xr => if f x then lp (xr, x::ys) else lp (xr, ys)";
+      "                (* end case *))";
+      "          in";
+      "            lp (xs, [])";
+      "          end";
+      "";
+      "    fun append (xs, ys) = (case (xs, ys)";
+      "           of ([], _) => ys";
+      "            | (_, []) => xs";
+      "            | _ => revAppend (rev xs, ys)";
+      "          (* end case *))";
+      "";
+      "    fun map f xs = let";
+      "          fun mapf xs = (case xs of [] => [] | (x::xr) => f x :: mapf xr)";
+      "          in";
+      "            mapf xs";
+      "          end";
+      "";
+      "    fun foldl f init xs = let";
+      "          fun foldf ([], acc) = acc";
+      "            | foldf (x::xr, acc) = foldf (xr, f(x, acc))";
+      "          in";
+      "            foldf (xs, init)";
+      "          end";
+      "";
+      "    fun foldr f init xs = let";
+      "          fun foldf ([], acc) = acc";
+      "            | foldf (x::xr, acc) = f (x, foldf (xr, acc))";
+      "          in";
+      "            foldf (xs, init)";
+      "          end";
+      "";
+      "    fun exists f xs = let";
+      "          fun existsf xs = (case xs";
+      "                 of [] => false";
+      "                  | (x::xr) => f x orelse existsf xr";
+      "                (* end case *))";
+      "          in";
+      "            existsf xs";
+      "          end";
+      "";
+      "    fun collate cmp ([], []) = EQUAL";
+      "      | collate cmp ([], _) = LESS";
+      "      | collate cmp (_, []) = GREATER";
+      "      | collate cmp (x::xs, y::ys) = (case cmp (x, y)";
+      "	   of EQUAL => collate cmp (xs, ys)";
+      "	    | order => order";
+      "	  (* end case *))";
+      "";
+      "  end";
+      "";
+      "val op @ = List.append";
+      "";
+      "fun not false = true";
+      "  | not true = false";
+      "";
+      *)
       "structure Test = struct";
     ] in
 
