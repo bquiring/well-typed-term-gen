@@ -69,21 +69,29 @@ let string_of_ty (ty0 : ty) =
     match ty with
     | TyVar a -> "'" ^ a
     | TyCons ("list", [ty']) ->
-       "(" ^ toStr true ty' ^ ") list"
+       wrap (toStr true ty' ^ " list")
     | TyCons (n, tys) ->
        (match tys with
         | [] -> n
         | _ ->
-           wrap (n ^ " " ^ String.concat " " (List.map (toStr true) tys)))
+           raise Util.Unimplemented
+(*
+             wrap (String.concat " " (List.map (toStr true) tys) ^ " " ^ n)
+ *)
+       )
     | TyFun ([], body_ty) ->
        let param_tys = "unit" in
        let body_ty = (toStr true body_ty) in
        wrap (param_tys ^ " -> " ^ body_ty)
+    | TyFun ([param_ty], body_ty) ->
+       let param_ty = toStr true param_ty in
+       let body_ty = toStr true body_ty in
+       wrap (param_ty ^ " -> " ^ body_ty)
     | TyFun (param_tys, body_ty) ->
        let param_tys = "(" ^ String.concat " * " (List.map (toStr true) param_tys) ^ ")" in
        let body_ty = (toStr true body_ty) in
        wrap (param_tys ^ " -> " ^ body_ty)
-    in
+        in
   toStr false ty0
 
 let infixOf f = 
@@ -113,7 +121,7 @@ let rec sml_string e =
          let body = sml_string e_body in
          "(fn " ^ params ^ " => " ^ body ^ ")"
       | _ -> 
-         let params = "(" ^ (String.concat ", " (List.map (fun (x, ty) -> x ^ " : (" ^ string_of_ty ty ^ ")") xs)) ^ ")" in
+         let params = "(" ^ (String.concat ", " (List.map (fun (x, ty) -> x ^ " : " ^ string_of_ty ty) xs)) ^ ")" in
          let body = sml_string e_body in
          "(fn " ^ params ^ " => " ^ body ^ ")")
   | Call (e_f, e_args) ->
